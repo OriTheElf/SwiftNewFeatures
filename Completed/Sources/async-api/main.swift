@@ -1,11 +1,77 @@
 import Foundation
 
+enum LocationError: Error {
+	case unknown
+}
+
+func getWeatherReadings(for location: String) async throws -> [Double] {
+	switch location {
+	case "London":
+		return (1...100).map { _ in Double.random(in: 6...26) }
+	case "Rome":
+		return (1...100).map { _ in Double.random(in: 10...32) }
+	case "San Francisco":
+		return (1...100).map { _ in Double.random(in: 12...20) }
+	default:
+		throw LocationError.unknown
+	}
+}
+
+func fibonacci(of number: Int) -> Int {
+	var first = 0
+	var second = 1
+
+	for _ in 0..<number {
+		let previous = first
+		first = second
+		second = previous + first
+	}
+
+	return first
+}
+
+struct DoubleGenerator: AsyncSequence {
+	typealias Element = Int
+
+	struct AsyncIterator: AsyncIteratorProtocol {
+		var current = 1
+
+		mutating func next() async -> Int? {
+			defer { current &*= 2 }
+			await Task.sleep(500000000)
+			if current < 0 {
+				return nil
+			} else {
+				return current
+			}
+		}
+	}
+
+	func makeAsyncIterator() -> AsyncIterator {
+		AsyncIterator()
+	}
+}
+func printMessage() async throws {
+	let doubles = DoubleGenerator()
+	for await value in doubles {
+		print(value)
+	}
+	let match = await doubles.contains(16777216)
+	print(match)
+}
+
+
 @main
 struct AsyncApp {
     
     static func main() async {
-        await fetchIPGeoCountryAPIs()
-        await fetchRevengeOfTheSithCharactersAPI()
+		do {
+			try await printMessage()
+		} catch {
+			print("Caught an error: \(error.localizedDescription)")
+		}
+//        await fetchIPGeoCountryAPIs()
+//        await fetchRevengeOfTheSithCharactersAPI()
     }
     
     static func fetchIPGeoCountryAPIs() async {
